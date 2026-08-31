@@ -3,16 +3,16 @@ import { Observable } from "rxjs";
 
 
 
-@Injectable()
-export class AuthGuard implements CanActivate{
-    canActivate(context: ExecutionContext): boolean {
-        const request=context.switchToHttp().getRequest()
-        const apiKey=request.headers['x-api-key']
+// @Injectable()
+// export class AuthGuard implements CanActivate{
+//     canActivate(context: ExecutionContext): boolean {
+//         const request=context.switchToHttp().getRequest()
+//         const apiKey=request.headers['x-api-key']
 
 
-        if(apiKey!=='my-secret-key'){
-            throw new UnauthorizedException('Invalid API Key')
-        }
-        return true
-    }
-}
+//         if(apiKey!=='my-secret-key'){
+//             throw new UnauthorizedException('Invalid API Key')
+//         }
+//         return true
+//     }
+// }

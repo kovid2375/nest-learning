@@ -1,4 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
 
 
 @Injectable()
@@ -35,16 +37,16 @@ export class UsersService {
         page:number=1,
 
         limit:number=10,
-        name?:string
+        // name?:string
     ){
         let filteredUser=this.users
         
         // filter by name
-        if(name){
-            filteredUser=this.users.filter(
-                (user)=>user.name.toLowerCase()===name.toLowerCase()
-            )
-        }
+        // if(name){
+        //     filteredUser=this.users.filter(
+        //         (user)=>user.name.toLowerCase()===name.toLowerCase()
+        //     )
+        // }
         //pagination
         const startIndex=(page-1) * limit;
         const endIndex=startIndex + limit;
@@ -87,6 +89,64 @@ export class UsersService {
         this.users.push(newUser)
         return newUser
     }
+
+    updateUser(id: number, updateUserDto: UpdateUserDto) {
+        const user = this.getUserById(id);
+        if (updateUserDto.name !== undefined) {
+            user.name = updateUserDto.name;
+        }
+        if (updateUserDto.email !== undefined) {
+            if (updateUserDto.email !== user.email) {
+                const exitingUser = this.users.find(u => u.email === updateUserDto.email);
+                if (exitingUser) {
+                    throw new ConflictException('user already exists');
+                }
+            }
+            user.email = updateUserDto.email;
+        }
+        if (updateUserDto.age !== undefined) {
+            user.age = updateUserDto.age;
+        }
+        return user;
+    }
+
+
+        replaceUser(
+        id: number,
+        createUserDto: CreateUserDto,
+        ) {
+        const index = this.users.findIndex(
+            (user) => user.id === id,
+        );
+
+        if (index === -1) {
+            throw new NotFoundException('User not found');
+        }
+
+        const existingUser = this.users.find(
+            (user) =>
+            user.email === createUserDto.email &&
+            user.id !== id,
+        );
+
+        if (existingUser) {
+            throw new ConflictException(
+            'Email already exists',
+            );
+        }
+
+        const updatedUser = {
+            id,
+            ...createUserDto,
+        };
+
+        this.users[index] = updatedUser;
+
+        return updatedUser;
+        }
+
+
+
     deleteUser(id: number) {
         const index = this.users.findIndex(users => users.id === id)
         if (index === -1) {
