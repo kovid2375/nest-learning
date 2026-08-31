@@ -46,9 +46,7 @@ export class UsersController{
     @Post()
     createUser(@Body() createUserDto:CreateUserDto){
         return this.userService.createUser(
-            createUserDto.name,
-            createUserDto.email,
-            createUserDto.age
+            createUserDto
         )
     }
 

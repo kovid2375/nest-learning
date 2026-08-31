@@ -1,157 +1,282 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+// import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+// import { CreateUserDto } from "./dto/create-user.dto";
+// import { UpdateUserDto } from "./dto/update-user.dto";
+
+
+// @Injectable()
+
+// export class UsersService {
+//     private users=[
+//         {
+//             id:1,
+//             name:'Kovid',
+//             email:'kovid@gmail.com',
+//             age:23
+//         },
+//         {
+//             id:2,
+//             name:'Rahul',
+//             email:'rahul@gmail.com',
+//             age:21
+//         },
+//         {
+//             id:3,
+//             name:'Sherya',
+//             email:'sherya@gmail.com',
+//             age:22
+//         },
+//         {
+//             id:4,
+//             name:'Saurav',
+//             email:'saurav@gmail.com',
+//             age:25
+//         }
+//     ]
+
+//     getUsers(
+//         page:number=1,
+
+//         limit:number=10,
+//         // name?:string
+//     ){
+//         let filteredUser=this.users
+        
+//         // filter by name
+//         // if(name){
+//         //     filteredUser=this.users.filter(
+//         //         (user)=>user.name.toLowerCase()===name.toLowerCase()
+//         //     )
+//         // }
+//         //pagination
+//         const startIndex=(page-1) * limit;
+//         const endIndex=startIndex + limit;
+        
+//         const data=filteredUser.slice(startIndex,endIndex)
+//         return{
+//             page,
+//             limit,
+//             total:filteredUser.length,
+//             data
+//         }
+
+
+        
+//     }
+
+//    getUserById(id:number){
+//     const user=this.users.find(
+//         (user)=>user.id===id
+//     )
+//     if(!user){
+//         throw new NotFoundException('user not found')
+//     }
+//     return user
+//    }
+
+//     createUser(name: string, email: string, age: number) {
+//         const exittingUser=this.users.find(
+//             user=>user.email===email
+//         )
+//         if(exittingUser){
+//             throw new ConflictException('user already exists')
+//         }
+//         const newUser={
+//             id:this.users.length+1,
+//             name,
+//             email,
+//             age
+//         }
+//         this.users.push(newUser)
+//         return newUser
+//     }
+
+//     updateUser(id: number, updateUserDto: UpdateUserDto) {
+//         const user = this.getUserById(id);
+//         if (updateUserDto.name !== undefined) {
+//             user.name = updateUserDto.name;
+//         }
+//         if (updateUserDto.email !== undefined) {
+//             if (updateUserDto.email !== user.email) {
+//                 const exitingUser = this.users.find(u => u.email === updateUserDto.email);
+//                 if (exitingUser) {
+//                     throw new ConflictException('user already exists');
+//                 }
+//             }
+//             user.email = updateUserDto.email;
+//         }
+//         if (updateUserDto.age !== undefined) {
+//             user.age = updateUserDto.age;
+//         }
+//         return user;
+//     }
+
+
+//         replaceUser(
+//         id: number,
+//         createUserDto: CreateUserDto,
+//         ) {
+//         const index = this.users.findIndex(
+//             (user) => user.id === id,
+//         );
+
+//         if (index === -1) {
+//             throw new NotFoundException('User not found');
+//         }
+
+//         const existingUser = this.users.find(
+//             (user) =>
+//             user.email === createUserDto.email &&
+//             user.id !== id,
+//         );
+
+//         if (existingUser) {
+//             throw new ConflictException(
+//             'Email already exists',
+//             );
+//         }
+
+//         const updatedUser = {
+//             id,
+//             ...createUserDto,
+//         };
+
+//         this.users[index] = updatedUser;
+
+//         return updatedUser;
+//         }
+
+
+
+//     deleteUser(id: number) {
+//         const index = this.users.findIndex(users => users.id === id)
+//         if (index === -1) {
+//             throw new NotFoundException('User not Found')
+//         }
+//         return this.users.splice(index, 1)[0]
+//     }
+// }
+
+import { ConflictException,Injectable,NotFoundException } from "@nestjs/common";
+import { PrismaService } from "prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 
 
 @Injectable()
+export class UsersService{
+    constructor(private readonly prisma:PrismaService){}
 
-export class UsersService {
-    private users=[
-        {
-            id:1,
-            name:'Kovid',
-            email:'kovid@gmail.com',
-            age:23
-        },
-        {
-            id:2,
-            name:'Rahul',
-            email:'rahul@gmail.com',
-            age:21
-        },
-        {
-            id:3,
-            name:'Sherya',
-            email:'sherya@gmail.com',
-            age:22
-        },
-        {
-            id:4,
-            name:'Saurav',
-            email:'saurav@gmail.com',
-            age:25
-        }
-    ]
+    //Get /users
 
-    getUsers(
-        page:number=1,
-
-        limit:number=10,
-        // name?:string
-    ){
-        let filteredUser=this.users
-        
-        // filter by name
-        // if(name){
-        //     filteredUser=this.users.filter(
-        //         (user)=>user.name.toLowerCase()===name.toLowerCase()
-        //     )
-        // }
-        //pagination
-        const startIndex=(page-1) * limit;
-        const endIndex=startIndex + limit;
-        
-        const data=filteredUser.slice(startIndex,endIndex)
-        return{
-            page,
-            limit,
-            total:filteredUser.length,
-            data
+        async getUsers(page: number = 1, limit: number = 10){
+            const skip = (page - 1) * limit;
+            return this.prisma.user.findMany({
+                skip,
+                take: limit,
+                orderBy:{
+                    id:'asc'
+                }
+            })
         }
 
+        //GET /users/:id
 
-        
-    }
-
-   getUserById(id:number){
-    const user=this.users.find(
-        (user)=>user.id===id
-    )
-    if(!user){
-        throw new NotFoundException('user not found')
-    }
-    return user
-   }
-
-    createUser(name: string, email: string, age: number) {
-        const exittingUser=this.users.find(
-            user=>user.email===email
-        )
-        if(exittingUser){
-            throw new ConflictException('user already exists')
+        async getUserById(id:number){
+            const user=await this.prisma.user.findUnique({
+                where:{id},
+            })
+            if(!user){
+            throw new NotFoundException('user not found')
+            }
+            return user
         }
-        const newUser={
-            id:this.users.length+1,
-            name,
-            email,
-            age
-        }
-        this.users.push(newUser)
-        return newUser
-    }
 
-    updateUser(id: number, updateUserDto: UpdateUserDto) {
-        const user = this.getUserById(id);
-        if (updateUserDto.name !== undefined) {
-            user.name = updateUserDto.name;
+        //Post /users
+
+        async createUser(createUserDto:CreateUserDto){
+            const existingUser=await this.prisma.user.findUnique({
+                where:{
+                    email:createUserDto.email
+                }
+            })
+            if(existingUser){
+                throw new ConflictException('User already exists')
+            }
+            return this.prisma.user.create({
+                data:createUserDto
+            })
         }
-        if (updateUserDto.email !== undefined) {
-            if (updateUserDto.email !== user.email) {
-                const exitingUser = this.users.find(u => u.email === updateUserDto.email);
-                if (exitingUser) {
-                    throw new ConflictException('user already exists');
+
+        //Patch /users/:id
+
+        async updateUser(
+            id:number,
+            updateUserDto:UpdateUserDto
+        ){
+            const user = await this.prisma.user.findUnique({
+                where:{id}
+            })
+            if(!user){
+                throw new NotFoundException('user not found')
+            }
+
+            if (updateUserDto.email !== undefined && updateUserDto.email !== user.email) {
+                const existingUser = await this.prisma.user.findUnique({
+                    where: {
+                        email: updateUserDto.email
+                    }
+                })
+                if (existingUser) {
+                    throw new ConflictException("Email already exists")
                 }
             }
-            user.email = updateUserDto.email;
-        }
-        if (updateUserDto.age !== undefined) {
-            user.age = updateUserDto.age;
-        }
-        return user;
-    }
-
-
-        replaceUser(
-        id: number,
-        createUserDto: CreateUserDto,
-        ) {
-        const index = this.users.findIndex(
-            (user) => user.id === id,
-        );
-
-        if (index === -1) {
-            throw new NotFoundException('User not found');
+            return this.prisma.user.update({
+                where:{id},
+                data:updateUserDto
+            })
         }
 
-        const existingUser = this.users.find(
-            (user) =>
-            user.email === createUserDto.email &&
-            user.id !== id,
-        );
+        //Put /users/:id
 
-        if (existingUser) {
-            throw new ConflictException(
-            'Email already exists',
-            );
+        async replaceUser(
+            id:number,
+            createUserDto:CreateUserDto,
+        ){
+            const user=await this.prisma.user.findUnique({
+                where:{id}
+            })
+
+            if(!user){
+                throw new NotFoundException('User not Found')
+            }
+
+            const existingUser=await this.prisma.user.findUnique({
+                where:{
+                    email:createUserDto.email
+                }
+            })
+
+            if(existingUser && existingUser.id !==id){
+                throw new ConflictException("Email already exists")
+            }
+
+            return this.prisma.user.update({
+                where:{id},
+                data:createUserDto
+            })
         }
 
-        const updatedUser = {
-            id,
-            ...createUserDto,
-        };
+        //Delete /users/:id
 
-        this.users[index] = updatedUser;
-
-        return updatedUser;
+        async deleteUser(id:number){
+            const user=await this.prisma.user.findUnique({
+                where:{id}
+            })
+            if(!user){
+                throw new NotFoundException('User not Found')
+            }
+            return this.prisma.user.delete({
+                where:{id}
+            })
         }
-
-
-
-    deleteUser(id: number) {
-        const index = this.users.findIndex(users => users.id === id)
-        if (index === -1) {
-            throw new NotFoundException('User not Found')
-        }
-        return this.users.splice(index, 1)[0]
-    }
 }
