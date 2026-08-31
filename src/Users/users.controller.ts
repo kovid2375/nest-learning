@@ -1,12 +1,15 @@
-import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, Post, Query } from "@nestjs/common";
+import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
+import { AuthGuard } from "src/common/auth.guard";
 
 @Controller('users')
+
 export class UsersController{
     constructor(private userService:UsersService){}
 
     @Get()
+    @UseGuards(AuthGuard)
     getUsers(
         @Query('page',new DefaultValuePipe(1),ParseIntPipe)
         page:number,
