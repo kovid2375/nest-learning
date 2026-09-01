@@ -68,7 +68,9 @@ export class AuthService {
         //JWT payload 
         const payload={
             sub:user.id,
-            email:user.email
+            email:user.email,
+            role:user.role
+            
         }
 
         //Genrate token
@@ -82,8 +84,29 @@ export class AuthService {
                 id:user.id,
                 name:user.name,
                 email:user.email,
-                age:user.age
+                age:user.age,
+                role:user.role
             }
         }
+    }
+
+    async getProfile(userId:number){
+        const user = await this.prisma.user.findUnique({
+            where:{
+                id:userId
+            },
+            select:{
+                id:true,
+                name:true,
+                email:true,
+                age:true,
+                createdAt:true,
+                updatedAt:true
+            }
+        })
+        if(!user){
+            throw new UnauthorizedException('user not found')
+        }
+        return user
     }
 }

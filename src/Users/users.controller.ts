@@ -7,6 +7,10 @@ import { LoggerInterceptor } from "src/common/logger.interceptor";
 
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { ApiTags } from "@nestjs/swagger";
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiBearerAuth } from "@nestjs/swagger";
+import { Roles } from "src/common/decorators/roles.decorator";
+import { RolesGuard } from "src/common/guards/roles.guard";
 
 
 @ApiTags('Users')
@@ -14,9 +18,11 @@ import { ApiTags } from "@nestjs/swagger";
 @UseInterceptors(LoggerInterceptor)
 export class UsersController{
     constructor(private userService:UsersService){}
-
+    
+    @ApiBearerAuth()
     @Get()
     // @UseGuards(AuthGuard)
+    @UseGuards(JwtAuthGuard)
     getUsers(
         @Query('page',new DefaultValuePipe(1),ParseIntPipe)
         page:number,
@@ -71,7 +77,11 @@ export class UsersController{
 
     
     @Delete(':id')
-    deleteUser(@Param('id')id:string){
-        return this.userService.deleteUser(Number(id))
+    @Roles('User')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    deleteUser(
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        return this.userService.deleteUser(id);
     }
 }
