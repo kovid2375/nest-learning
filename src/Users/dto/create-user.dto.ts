@@ -21,4 +21,9 @@ export class CreateUserDto{
  })
  age:number
 
+ @IsString()
+ @IsNotEmpty()
+ @MinLength(6)
+ password:string
 }
+
