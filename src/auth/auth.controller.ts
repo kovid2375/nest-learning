@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards,} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 
 @ApiTags('Authentication')
@@ -68,5 +70,19 @@ export class AuthController {
     @ApiBearerAuth()
     getProfile(@CurrentUser() user:any){
         return this.authService.getProfile(user.userId)
+    }
+
+
+    @Post('refresh')
+    @Public()
+    @ApiOperation({
+        summary:'Get new access and refresh tokens',
+    })
+    refreshTokens(
+        @Body() refreshTokenDto:RefreshTokenDto,
+    ){
+        return this.authService.refreshTokens(
+            refreshTokenDto.refreshToken
+        )
     }
 }

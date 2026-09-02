@@ -4,12 +4,14 @@ import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly prisma:PrismaService,
-        private readonly jwtService:JwtService
+        private readonly jwtService:JwtService,
+        private readonly configService:ConfigService
     ){}
 
     async register(registerDto:RegisterDto){
@@ -65,21 +67,37 @@ export class AuthService {
             )
         }
         
-        //JWT payload 
-        const payload={
-            sub:user.id,
-            email:user.email,
-            role:user.role
+        // //JWT payload 
+        // const payload={
+        //     sub:user.id,
+        //     email:user.email,
+        //     role:user.role
             
-        }
+        // }
 
-        //Genrate token
+        // //Genrate token
 
-        const accessToken= await this.jwtService.signAsync(payload)
+        // const accessToken= await this.jwtService.signAsync(payload)
+
+        const {accessToken,refreshToken}= await this.genrateTokens(
+            user.id,
+            user.email,
+            user.role
+        )
+
+        await this.prisma.user.update({
+            where:{
+                id:user.id
+            },
+            data:{
+                refreshToken:refreshToken
+            }
+        })
 
         return{
             message:'Login Successful',
             access_token:accessToken,
+            refresh_token:refreshToken,
             user:{
                 id:user.id,
                 name:user.name,
@@ -108,5 +126,84 @@ export class AuthService {
             throw new UnauthorizedException('user not found')
         }
         return user
+    }
+
+    //Creat and store refresh Token
+    
+    async genrateTokens(
+        userId: number,
+        email: string,
+        role: string
+    ) {
+        const payload = {
+            sub: userId,
+            email,
+            role
+        };
+
+        const accessToken = await this.jwtService.signAsync(
+            payload,
+            {
+                secret: this.configService.get<string>('JWT_SECRET'),
+                expiresIn: '1d'
+            }
+        );
+
+        const refreshToken = await this.jwtService.signAsync(
+            payload,
+            {
+                secret: this.configService.get<string>('JWT_REFRESH'),
+                expiresIn: '7d'
+            }
+        );
+
+        return {
+            accessToken,
+            refreshToken
+        };
+    }
+
+    async refreshTokens(refreshToken:string){
+        try{
+            const payload = await this.jwtService.verifyAsync(
+                refreshToken,
+                {
+                    secret: this.configService.get<string>('JWT_REFRESH')
+                }
+            );
+
+            const user = await this.prisma.user.findUnique({
+                where:{id: payload.sub,}
+            })
+
+            if(!user||user.refreshToken!==refreshToken){
+                throw new UnauthorizedException('Invalid or expired refresh Token')
+            }
+
+            const tokens= await this.genrateTokens(
+                user.id,
+                user.email,
+                user.role
+            )
+
+            await this.prisma.user.update({
+                where:{
+                    id:user.id
+                },
+                data:{
+                    refreshToken:tokens.refreshToken
+                }
+            })
+
+            return {
+                message:'Tokens refreshed successfully',
+                access_token:tokens.accessToken,
+                refresh_token:tokens.refreshToken,
+            }
+        }catch{
+            throw new UnauthorizedException(
+                'Invalid or expired refresh Token'
+            )
+        }
     }
 }
