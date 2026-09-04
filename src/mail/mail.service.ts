@@ -24,7 +24,8 @@ export class MailService {
     async sendMail(
         to:string,
         subject:string,
-        text:string
+        text:string,
+        html?:string
     ){
        try{
         const info=await this.transporter.sendMail({
@@ -33,7 +34,8 @@ export class MailService {
             }>`,
             to,
             subject,
-            text
+            text,
+            ...(html ? { html } : {})
         })
         return{
             message:'EMAIL sent Successfully',

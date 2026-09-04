@@ -11,6 +11,13 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { verifyOtpDto } from './dto/verify-otp.dto';
+import {
+    verifyEmailTemplate,
+    sendOtpTemplate,
+    resetPasswordTemplate,
+    otpVerifiedSuccessTemplate,
+    passwordResetSuccessTemplate,
+} from 'src/mail/templates/email-templates';
 @Injectable()
 export class AuthService {
     constructor(
@@ -49,19 +56,13 @@ export class AuthService {
         })
         const verificationUrl=`http://localhost:3000/auth/verify-email?token=${verificationToken}`
 
+        const emailTemplate = verifyEmailTemplate(user.name, verificationUrl);
         await this.mailService.sendMail(
             user.email,
-            'Email Verification',
-            `
-                Hello ${user.name},\n\n,
-                Thank you for registering with our app.\n\n,
-                Please click on the link below to verify your email address:\n\n,
-                ${verificationUrl}\n\n,
-                If you did not create this account, please ignore this email.\n\n,
-                Best regards,\n,
-                Your App Team
-            `
-        )
+            'Verify your email address',
+            emailTemplate.text,
+            emailTemplate.html,
+        );
 
         //never return the password 
         const {password, ...result}=user
@@ -314,26 +315,18 @@ export class AuthService {
             }
         })
         const resetUrl=`http://localhost:3000/auth/reset-password?token=${resetToken}`
+        const resetEmail = resetPasswordTemplate(user.name, resetUrl);
         await this.mailService.sendMail(
             user.email,
-    'Reset your password',
-    `Hello ${user.name},
+            'Reset your password',
+            resetEmail.text,
+            resetEmail.html,
+        );
 
-You requested a password reset.
-
-Click the link below to reset your password:
-
-${resetUrl}
-
-This link will expire in 15 minutes.
-
-If you did not request this, please ignore this email.`,
-  );
-
-  return {
-    message:
-      'If an account exists with this email, a reset link has been sent',
-  };
+        return {
+            message:
+                'If an account exists with this email, a reset link has been sent',
+        };
     }
 
 
@@ -360,7 +353,7 @@ If you did not request this, please ignore this email.`,
             10
         )
 
-        await this.prisma.user.update({
+        const updatedUser = await this.prisma.user.update({
             where:{
                 id:user.id,
             },
@@ -376,6 +369,16 @@ If you did not request this, please ignore this email.`,
             },
             
         })
+
+        // Send confirmation email
+        const confirmEmail = passwordResetSuccessTemplate(updatedUser.name);
+        await this.mailService.sendMail(
+            updatedUser.email,
+            'Your password was changed',
+            confirmEmail.text,
+            confirmEmail.html,
+        );
+
         return{
             message:'Password reset Successfully'
         }
@@ -410,25 +413,18 @@ If you did not request this, please ignore this email.`,
                 otpExpires: otpExpiresAt,
             }
         })
+
+        const otpEmail = sendOtpTemplate(user.name, otp);
         await this.mailService.sendMail(
             user.email,
-    'Verify your email',
-    `Hello ${user.name},
+            'Your One-Time Password (OTP)',
+            otpEmail.text,
+            otpEmail.html,
+        );
 
-You requested to verify your email.
-
-Please use the OTP below to verify your email:
-
-${otp}
-
-This OTP will expire in 10 minutes.
-
-If you did not request this, please ignore this email.`,
-  );
-
-  return {
-    message: 'OTP sent to your email',
-  };
+        return {
+            message: 'OTP sent to your email',
+        };
     }
 
 
@@ -459,7 +455,7 @@ If you did not request this, please ignore this email.`,
             )
         }
 
-        await this.prisma.user.update({
+        const verifiedUser = await this.prisma.user.update({
             where:{
                 id:user.id,
             },
@@ -470,6 +466,16 @@ If you did not request this, please ignore this email.`,
                 otpExpires:null,
             }
         })
+
+        // Send confirmation email
+        const successEmail = otpVerifiedSuccessTemplate(verifiedUser.name);
+        await this.mailService.sendMail(
+            verifiedUser.email,
+            'Email verified successfully',
+            successEmail.text,
+            successEmail.html,
+        );
+
         return{
             message:'Otp verified  successfully'
         }
