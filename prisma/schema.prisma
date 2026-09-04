@@ -20,6 +20,12 @@ model User {
   password  String
   role      Role     @default(User)
   refreshToken String?
+  isEmailVerified Boolean @default(false)
+  verificationToken String?
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
+  otpHash String?
+  otpExpires DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

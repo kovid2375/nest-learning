@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards,} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards,} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -7,7 +7,10 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { Public } from 'src/common/decorators/public.decorator';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
+import { verifyOtpDto } from './dto/verify-otp.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -84,5 +87,111 @@ export class AuthController {
         return this.authService.refreshTokens(
             refreshTokenDto.refreshToken
         )
+    }
+
+    @Post('logout')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    logout(@CurrentUser() user:any){
+        return this.authService.logout(user.userId)
+    }
+
+
+    @Get('verify-email')
+    @Public()
+    @ApiOperation({
+        summary:'Verify user email'
+    })
+    @ApiResponse({
+        status:200,
+        description:'Email verified successfully'
+    })
+    @ApiResponse({
+        status:400,
+        description:'Invalid or expired verification token'
+    })
+    verifyEmail(
+        @Query('token') token:string,
+    ){
+        return this.authService.verifyEmail(token)
+    }
+
+
+
+    @Post('forgot-password')
+    @Public()
+    @ApiOperation({
+        summary:'Forgot password'
+    })
+    @ApiResponse({
+        status:200,
+        description:'Password reset link sent successfully'
+    })
+    @ApiResponse({
+        status:400,
+        description:'Invalid email'
+    })
+    forgotPassword(
+        @Body() forgotPasswordDto:ForgotPasswordDto
+    ){
+        return this.authService.forgotpassword(forgotPasswordDto)
+    }
+
+    @Post('reset-password')
+    @Public()
+    @ApiOperation({
+        summary:'Reset password'
+    })
+    @ApiResponse({
+        status:200,
+        description:'Password reset successfully'
+    })
+    @ApiResponse({
+        status:400,
+        description:'Invalid reset token'
+    })
+    resetPassword(
+        @Query('token') token:string,
+        @Body() resetPasswordDto:ResetPasswordDto
+    ){
+        return this.authService.resetPassword(token,resetPasswordDto)
+    }
+
+
+
+    @Post('send-otp')
+    @Public()
+    @ApiOperation({
+        summary:'Send OTP'
+    })
+    @ApiResponse({
+        status:200,
+        description:'OTP sent successfully'
+    })
+    @ApiResponse({
+        status:400,
+        description:'Invalid email'
+    })
+    sendOtp(@Body()sendOtpDto:SendOtpDto){
+        return this.authService.sendOtp(sendOtpDto)
+    }
+
+
+
+    @Post('verify-otp')
+    @Public()
+    @ApiOperation({
+        summary:'Verify OTP'
+    })
+    @ApiResponse({
+        status:200,
+        description:'OTP verified successfully'
+    })
+    @ApiResponse({
+        status:400,
+        description:'Invalid or expired OTP'
+    })
+    verifyOtp(@Body()verifyOtpDto:verifyOtpDto){
+        return this.authService.verifyOtp(verifyOtpDto)
     }
 }

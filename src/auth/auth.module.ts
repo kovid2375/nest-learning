@@ -5,8 +5,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import 'dotenv/config';
 import { ConfigService } from '@nestjs/config';
+import { MailModule } from 'src/mail/mail.module';
 @Module({
-  imports:[JwtModule.registerAsync({
+  imports:[MailModule,JwtModule.registerAsync({
     inject:[ConfigService],
     useFactory:(configService:ConfigService)=>({
       secret:configService.getOrThrow<string>('JWT_SECRET'),

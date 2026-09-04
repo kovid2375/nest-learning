@@ -11,6 +11,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { RolesGuard } from "src/common/guards/roles.guard";
+import { GetUserDto } from "./dto/get-users.dto";
 
 
 @ApiTags('Users')
@@ -22,18 +23,14 @@ export class UsersController{
     @ApiBearerAuth()
     @Get()
     // @UseGuards(AuthGuard)
-    @UseGuards(JwtAuthGuard)
+    
     getUsers(
-        @Query('page',new DefaultValuePipe(1),ParseIntPipe)
-        page:number,
-
-        @Query('limit',new DefaultValuePipe(10),ParseIntPipe)
-        limit:number,
+        @Query() query:GetUserDto
 
         // @Query('name')
         // name?:string
     ){
-        return this.userService.getUsers(page,limit);
+        return this.userService.getUsers(query);
     }
     
     // @Get('search')
