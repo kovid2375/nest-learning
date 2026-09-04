@@ -7,10 +7,11 @@ import {
 
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Validation
   app.useGlobalPipes(
@@ -20,6 +21,11 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  //Serve uploaded files 
+  app.useStaticAssets(join(process.cwd(),'uploads'),{
+    prefix:'/uploads/'
+  })
+
   app.useGlobalFilters(
     new HttpExceptionFilter()
   )

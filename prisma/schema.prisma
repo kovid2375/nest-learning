@@ -26,6 +26,7 @@ model User {
   resetPasswordExpires DateTime?
   otpHash String?
   otpExpires DateTime?
+  profileImage String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
