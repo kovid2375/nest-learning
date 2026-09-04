@@ -47,6 +47,7 @@ export class UploadController {
             }
         }
     })
+    
     async uploadProfile(
         @Req()req,
         @UploadedFile(
@@ -61,20 +62,31 @@ export class UploadController {
         )
         file:Express.Multer.File
     ){
+        const existingUser=await this.prisma.user.findUnique({
+            where:{
+                id:req.user.userId
+            }
+        })
+        if(existingUser?.profileImagePublicId){
+            await this.cloudinaryService.deleteImage(existingUser.profileImagePublicId)
+        }
         const result:any=await this.cloudinaryService.uploadImage(file)
         const imageUrl=result.secure_url
+        const publicId=result.public_id
         const user =await this.prisma.user.update({
             where:{
                 id:req.user.userId
             },
             data:{
-                profileImage:imageUrl
+                profileImage:imageUrl,
+                profileImagePublicId:publicId
             },
             select:{
                 id:true,
                 name:true,
                 email:true,
-                profileImage:true
+                profileImage:true,
+                profileImagePublicId:true
             }
         })
         return{

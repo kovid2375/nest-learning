@@ -12,6 +12,7 @@ import { ApiBearerAuth } from "@nestjs/swagger";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { RolesGuard } from "src/common/guards/roles.guard";
 import { GetUserDto } from "./dto/get-users.dto";
+import { CacheInterceptor } from "@nestjs/cache-manager";
 
 
 @ApiTags('Users')
@@ -22,6 +23,7 @@ export class UsersController{
     
     @ApiBearerAuth()
     @Get()
+    @UseInterceptors(CacheInterceptor)
     // @UseGuards(AuthGuard)
     
     getUsers(

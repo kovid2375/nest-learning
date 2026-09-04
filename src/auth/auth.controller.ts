@@ -11,6 +11,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { verifyOtpDto } from './dto/verify-otp.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -20,6 +21,12 @@ export class AuthController {
     ){}
 
     @Post('register')
+    @Throttle({
+        default:{
+            limit:2,
+            ttl:60000
+        }
+    })
     @ApiOperation({
         summary:'Register a new user'
     })
@@ -38,6 +45,12 @@ export class AuthController {
     }
 
     @Post('login')
+    @Throttle({
+        default:{
+            limit:2,
+            ttl:60000
+        }
+    })
     @ApiOperation({
         summary:'Login and receive token'
     })
@@ -160,6 +173,12 @@ export class AuthController {
 
 
     @Post('send-otp')
+    @Throttle({
+        default:{
+            limit:1,
+            ttl:60000
+        }
+    })
     @Public()
     @ApiOperation({
         summary:'Send OTP'

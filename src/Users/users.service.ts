@@ -163,14 +163,16 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import * as bcrypt from 'bcrypt';
 import { GetUserDto } from "./dto/get-users.dto";
 import { contains } from "class-validator";
-
+import { Logger } from "@nestjs/common";
 @Injectable()
 export class UsersService {
+    private readonly logger = new Logger(UsersService.name);
     constructor(private readonly prisma: PrismaService) { }
 
     //Get /users
 
     async getUsers(query: GetUserDto) {
+      this.logger.log('Fetching users')
   const {
     page = 1,
     limit = 10,

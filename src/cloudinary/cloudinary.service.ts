@@ -3,6 +3,7 @@ import { cloudinary } from './cloudinary.config';
 
 @Injectable()
 export class CloudinaryService {
+    
     async uploadImage(file:Express.Multer.File){
         return new Promise((resolve,reject)=>{
             const uploadStream=cloudinary.uploader.upload_stream(
@@ -18,6 +19,11 @@ export class CloudinaryService {
                 }
             )
             uploadStream.end(file.buffer)
+        })
+    }
+    async deleteImage(publicId:string){
+        return cloudinary.uploader.destroy(publicId,{
+            resource_type:'image'
         })
     }
 }
